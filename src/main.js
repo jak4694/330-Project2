@@ -13,16 +13,21 @@ import * as canvas from './canvas.js';
 
 // 1 - here we are faking an enumeration
 const DEFAULTS = Object.freeze({
-	sound1  :  "media/New Adventure Theme.mp3"
+	sound1  :  "media/synthetic.mp3"
 });
+
+let gridSpeed,barHeightPercentage,sunPercentage,progress;
 
 const drawParams = {
     showGradient: true,
     showBars : true,
-    showCircles : true,
+    showSun : true,
     showNoise : false,
     invertColors : false,
-    showEmboss : false
+    showEmboss : false,
+    showGrayscale : false,
+    showGrid : true,
+    showCurve: true
 };
 
 function init(){
@@ -104,10 +109,10 @@ function setupUI(canvasElement){
         drawParams.showBars = barsCB.checked;
     }
     
-    let circlesCB = document.querySelector("#circlesCB");
-    circlesCB.checked = true;
-    circlesCB.onclick = function(){
-        drawParams.showCircles = circlesCB.checked;
+    let sunCB = document.querySelector("#sunCB");
+    sunCB.checked = true;
+    sunCB.onclick = function(){
+        drawParams.showSun = sunCB.checked;
     }
     
     let noiseCB = document.querySelector("#noiseCB");
@@ -125,6 +130,11 @@ function setupUI(canvasElement){
         drawParams.showEmboss = embossCB.checked;
     }
     
+    let grayscaleCB = document.querySelector("#grayscaleCB");
+    grayscaleCB.onclick = function(){
+        drawParams.showGrayscale = grayscaleCB.checked;
+    }
+    
     document.querySelector('#highshelfCB').checked = false;
 
     document.querySelector('#highshelfCB').onchange = e => {
@@ -136,18 +146,63 @@ function setupUI(canvasElement){
     document.querySelector('#lowshelfCB').onchange = e => {
         audio.toggleLowshelf();
     }
+    
+    let gridSlider = document.querySelector("#gridSlider");
+    let gridLabel = document.querySelector("#gridLabel");
+    
+    gridSlider.oninput = e => {
+        gridSpeed = e.target.value;
+        gridLabel.innerHTML = e.target.value;
+    };
+    
+    gridSlider.dispatchEvent(new Event("input"));
+    
+    let barSlider = document.querySelector("#barSlider");
+    let barLabel = document.querySelector("#barLabel");
+    
+    barSlider.oninput = e => {
+        barHeightPercentage = e.target.value;
+        barLabel.innerHTML = e.target.value;
+    };
+    
+    barSlider.dispatchEvent(new Event("input"));
+    
+    let sunSlider = document.querySelector("#sunSlider");
+    let sunLabel = document.querySelector("#sunLabel");
+    
+    sunSlider.oninput = e => {
+        sunPercentage = e.target.value;
+        sunLabel.innerHTML = e.target.value;
+    };
+    
+    sunSlider.dispatchEvent(new Event("input"));
+    
+    let frequencyButton = document.querySelector("#frequency");
+    frequencyButton.onclick = e => {
+        canvas.updateAudioDataType(e.target.value);
+    }
+    
+    let waveformButton = document.querySelector("#waveform");
+    waveformButton.onclick = e => {
+        canvas.updateAudioDataType(e.target.value);
+    }
+    
+    progress = document.querySelector("#progress");
+    
+    let progressCurveCB = document.querySelector("#progressCurveCB");
+    progressCurveCB.checked = true;
+    progressCurveCB.onchange = e => {
+        drawParams.showCurve = progressCurveCB.checked;
+    }
 } // end setupUI
 
 function loop(){
 	requestAnimationFrame(loop);
     canvas.draw(drawParams);
-    
-	// 1) create a byte array (values of 0-255) to hold the audio data
-	// normally, we do this once when the program starts up, NOT every frame
-	let audioData = new Uint8Array(audio.analyserNode.fftSize/2);
-	
-	// 2) populate the array of audio data *by reference* (i.e. by its address)
-	audio.analyserNode.getByteFrequencyData(audioData);
+    canvas.updateGrid(gridSpeed);
+    canvas.updateBarPercent(barHeightPercentage);
+    canvas.updateSunPercent(sunPercentage);
+    progress.innerHTML = "Progress: " + Math.round(audio.getProgress() * 100) + "%";
 }
 
 export {init};

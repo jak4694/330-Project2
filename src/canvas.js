@@ -8,9 +8,38 @@
 */
 
 import * as utils from './utils.js';
+import { getProgress } from './audio.js';
 
 let ctx,canvasWidth,canvasHeight,gradient,analyserNode,audioData,sunImage;
 
+let gridOffsetPercentage = 0;
+let barHeightPercentage = 1;
+let sunPercentage = 1;
+let audioDataType = "frequency";
+
+function updateGrid(multiplier = 1)
+{
+    gridOffsetPercentage += (0.01 * multiplier);
+    if(gridOffsetPercentage > 1)
+    {
+        gridOffsetPercentage--;
+    }
+}
+
+function updateBarPercent(percentage)
+{
+    barHeightPercentage = percentage;
+}
+
+function updateSunPercent(percentage)
+{
+    sunPercentage = percentage;
+}
+
+function updateAudioDataType(dataType)
+{
+    audioDataType = dataType;
+}
 
 function setupCanvas(canvasElement,analyserNodeRef){
 	// create drawing context
@@ -27,11 +56,14 @@ function setupCanvas(canvasElement,analyserNodeRef){
 }
 
 function draw(params={}){
-  // 1 - populate the audioData array with the frequency data from the analyserNode
-	// notice these arrays are passed "by reference" 
-	analyserNode.getByteFrequencyData(audioData);
-	// OR
-	//analyserNode.getByteTimeDomainData(audioData); // waveform data
+    if(audioDataType == "frequency")
+    {
+        analyserNode.getByteFrequencyData(audioData);
+    }
+	else
+    {
+        analyserNode.getByteTimeDomainData(audioData);
+    }
 	
 	// 2 - draw background
 	ctx.save();
@@ -39,6 +71,8 @@ function draw(params={}){
     ctx.globalAlpha = 1;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     ctx.restore();
+    
+    let bottomOffset = canvasHeight / 4;
     
 	if(params.showGradient)
     {
@@ -48,8 +82,34 @@ function draw(params={}){
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
         ctx.restore();
     }
-    if(params.showCircles){
-        let maxRadius = canvasHeight/3;
+    if(params.showCurve)
+    {
+        let yPos = canvasHeight / 8;
+        let curveWidth = 20;
+        let curveHeight = 150;
+        let progress = getProgress();
+        ctx.save();
+        ctx.strokeStyle = "black";
+        let percent = 0;
+        for(let i = 0; i < audioData.length; i++)
+        {
+            percent += audioData[i];
+        }
+        percent /= audioData.length * 255;
+        let startX = (canvasWidth * progress) - (curveWidth / 2);
+        let endX = (canvasWidth * progress) + (curveWidth / 2)
+        if(progress > 0 && progress < 100 && percent > 0)
+        {
+            ctx.beginPath();
+            ctx.moveTo(startX, 0);
+            ctx.quadraticCurveTo(startX + (curveWidth / 2), curveHeight * percent, endX, 0);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+    if(params.showSun)
+    {
+        let maxRadius = (canvasHeight / 3.5) * sunPercentage;
         let percent = 0;
         for(let i = 0; i < audioData.length; i++)
         {
@@ -58,35 +118,90 @@ function draw(params={}){
         percent /= audioData.length * 255;
         ctx.save();
         ctx.globalAlpha = 1;
-        ctx.translate(canvasWidth / 2, canvasHeight / 3);
+        ctx.translate(canvasWidth / 2, canvasHeight / 3.5);
         ctx.scale(1 + (percent * 1.2), 1 + (percent * 1.2));
+        ctx.rotate(Math.PI);
         ctx.drawImage(sunImage, -maxRadius / 2, -maxRadius / 2, maxRadius, maxRadius);
         ctx.restore();
     }
-	if(params.showBars){
+	if(params.showBars)
+    {
         let barSpacing = 1;
         let margin = 2;
         let screenWidthForBars = canvasWidth - (audioData.length * 2 * barSpacing) - margin * 2;
         let barWidth = screenWidthForBars / (audioData.length * 2);
-        let barHeight = 200;
-        let topSpacing = 100;
+        let barHeight = (canvasHeight / 2.7) * barHeightPercentage;
+        let minimumPercentage = 0.05;
         
         ctx.save();
         ctx.fillStyle = 'rgba(255,165,51,1)';
-        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+        ctx.strokeStyle = 'rgba(0,0,0,1)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        let height;
+        ctx.moveTo(margin + barSpacing, canvasHeight - bottomOffset);
+        height = (audioData[audioData.length - 1] / 255) * barHeight;
+        height = height > (barHeight * minimumPercentage) ? height : (barHeight * minimumPercentage);
+        ctx.lineTo(margin + barSpacing, canvasHeight - height - bottomOffset);
+        for(let i = audioData.length - 2; i >= 0; i--)
+        {
+            height = (audioData[i] / 255) * barHeight;
+            height = height > (barHeight * minimumPercentage) ? height : (barHeight * minimumPercentage);
+            ctx.lineTo(margin + (audioData.length - i - 1) * (barWidth + barSpacing), canvasHeight - height - bottomOffset);
+            ctx.lineTo(margin + (audioData.length - i - 1) * (barWidth + barSpacing), canvasHeight - bottomOffset);
+            ctx.moveTo(margin + (audioData.length - i - 1) * (barWidth + barSpacing), canvasHeight - height - bottomOffset);
+        }
         for(let i = 0; i < audioData.length; i++)
         {
-            let height = (audioData[i] / 255) * barHeight;
-            height = height > (barHeight / 20) ? height : (barHeight / 20);
-            ctx.fillRect(margin + (audioData.length - i) * (barWidth + barSpacing), canvasHeight - height, barWidth, height);
-            ctx.strokeRect(margin + (audioData.length - i) * (barWidth + barSpacing), canvasHeight - height, barWidth, height);
+            height = (audioData[i] / 255) * barHeight;
+            height = height > (barHeight * minimumPercentage) ? height : (barHeight * minimumPercentage);
+            ctx.lineTo(margin + (audioData.length + i) * (barWidth + barSpacing), canvasHeight - height - bottomOffset);
+            ctx.lineTo(margin + (audioData.length + i) * (barWidth + barSpacing), canvasHeight - bottomOffset);
+            ctx.moveTo(margin + (audioData.length + i) * (barWidth + barSpacing), canvasHeight - height - bottomOffset);
         }
-        for(let i = 1; i < audioData.length; i++)
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, canvasHeight - bottomOffset);
+        ctx.lineTo(canvasWidth, canvasHeight - bottomOffset);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+    }
+    if(params.showGrid)
+    {
+        let verticalLines = 15;
+        let horizontalLines = 5;
+        let horizontalMargin = 10;
+        let bottomSpacing = 5;
+        
+        ctx.save();
+        ctx.strokeStyle = 'rgba(248,24,148,1)';
+        ctx.lineWidth = 3;
+        for(let i = 0; i < verticalLines; i++)
         {
-            let height = (audioData[i] / 255) * barHeight;
-            height = height > (barHeight / 20) ? height : (barHeight / 20);
-            ctx.fillRect(canvasWidth - (margin + (audioData.length - i) * (barWidth + barSpacing)), canvasHeight - height, barWidth, height);
-            ctx.strokeRect(canvasWidth - (margin + (audioData.length - i) * (barWidth + barSpacing)), canvasHeight - height, barWidth, height);
+            let x = (canvasWidth - horizontalMargin) * (i / (verticalLines - 1)) + (horizontalMargin / 2);
+            let spacing = (i - ((verticalLines - 1) / 2)) * bottomSpacing;
+            ctx.beginPath();
+            ctx.moveTo(x, canvasHeight - bottomOffset);
+            ctx.lineTo(x + spacing, canvasHeight);
+            ctx.closePath();
+            ctx.stroke();
+        }
+        for(let i = 0; i < horizontalLines; i++)
+        {
+            let offset = (i / (horizontalLines - 1)) + gridOffsetPercentage;
+            if(offset > 1)
+            {
+                offset--;
+            }
+            let y = bottomOffset * offset + (canvasHeight - bottomOffset);
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvasWidth, y);
+            ctx.closePath();
+            ctx.stroke();
         }
         ctx.restore();
     }
@@ -123,6 +238,11 @@ function draw(params={}){
             data[i + 1] = 255 - green;
             data[i + 2] = 255 - blue;
         }
+        if(params.showGrayscale)
+        {
+            let average = (data[i] + data[i + 1] + data[i + 2]) / 3;
+            data[i] = data[i + 1] = data[i + 2] = average;
+        }
 	} // end for
     
     if(params.showEmboss)
@@ -141,4 +261,4 @@ function draw(params={}){
     ctx.putImageData(imageData, 0, 0);
 }
 
-export {setupCanvas,draw};
+export {setupCanvas,draw,updateGrid,updateBarPercent,updateSunPercent,updateAudioDataType};

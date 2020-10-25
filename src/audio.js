@@ -53,10 +53,10 @@ function setupWebaudio(filePath){
     gainNode.gain.value = DEFAULTS.gain;
 
     // 8 - connect the nodes - we now have an audio graph
-    sourceNode.connect(biquadFilter);
+    sourceNode.connect(analyserNode);
+    analyserNode.connect(biquadFilter);
     biquadFilter.connect(lowShelfBiquadFilter);
-    lowShelfBiquadFilter.connect(analyserNode);
-    analyserNode.connect(gainNode);
+    lowShelfBiquadFilter.connect(gainNode);
     gainNode.connect(audioCtx.destination);
 }
 
@@ -96,4 +96,9 @@ function toggleLowshelf(){
     }
 }
 
-export {audioCtx, setupWebaudio, playCurrentSound, pauseCurrentSound, loadSoundFile, setVolume, analyserNode, toggleHighshelf, toggleLowshelf};
+function getProgress()
+{
+    return element.currentTime / element.duration;
+}
+
+export {audioCtx, setupWebaudio, playCurrentSound, pauseCurrentSound, loadSoundFile, setVolume, analyserNode, toggleHighshelf, toggleLowshelf, getProgress};

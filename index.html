@@ -16,11 +16,12 @@
 		
 			<label>Track: 
 				<select id="trackSelect">
-					<option value="media/New Adventure Theme.mp3" selected>New Adventure Theme</option>
-					<option value="media/Peanuts Theme.mp3">Peanuts Theme</option>
-					<option value="media/The Picard Song.mp3">The Picard Song</option>
-				</select>
+					<option value="media/synthetic.mp3" selected>Synthetic</option>
+					<option value="media/over-the-ocean.mp3">Over the Ocean</option>
+					<option value="media/dreamwalking.mp3">Dreamwalking</option>
+				</select> 
 			</label>
+            <label id="progress">???</label>
 		</section>
 		
 		<section>
@@ -28,16 +29,37 @@
 			<span id="volumeLabel">???</span>
 		</section>
         <section>
+            Grid Speed: <input type="range" id="gridSlider" min="0.05" max="1" value="0.5" step="0.01">
+			<span id="gridLabel">???</span>
+        </section>
+        <section>
+            Bar Height: <input type="range" id="barSlider" min="0.2" max="1" value="1" step="0.01">
+			<span id="barLabel">???</span>
+        </section>
+        <section>
+            Sun Size: <input type="range" id="sunSlider" min="0.5" max="1" value="1" step="0.01">
+			<span id="sunLabel">???</span>
+        </section>
+        <section>
             <span><label for="highshelfCB">Highshelf Filter (Treble)</label><input type="checkbox" id="highshelfCB"></span>
             <span><label for="lowshelfCB">Lowshelf Filter (Bass)</label><input type="checkbox" id="lowshelfCB"></span>
         </section>
         <section>
             <span><input type="checkbox" id="gradientCB"><label for="gradientCB">Show Gradient</label></span>
             <span><input type="checkbox" id="barsCB"><label for="barsCB">Show Bars</label></span>
-            <span><input type="checkbox" id="circlesCB"><label for="circlesCB">Show Sun</label></span>
+            <span><input type="checkbox" id="sunCB"><label for="sunCB">Show Sun</label></span>
+            <span><input type="checkbox" id="progressCurveCB"><label for="progressCurveCB">Show Progress Curve</label></span>
             <span><input type="checkbox" id="noiseCB"><label for="noiseCB">Show Noise</label></span>
             <span><input type="checkbox" id="invertColorsCB"><label for="invertColorsCB">Invert Colors</label></span>
             <span><input type="checkbox" id="embossCB"><label for="embossCB">Show Emboss</label></span>
+            <span><input type="checkbox" id="grayscaleCB"><label for="grayscaleCB">Show Grayscale</label></span>
+        </section>
+        <section>
+            Audio Data Type: 
+            <input type="radio" id="frequency" name="visualization" value="frequency" checked>
+            <label for="frequency">Frequency</label>
+            <input type="radio" id="waveform" name="visualization" value="waveform">
+            <label for="waveform">Waveform</label> 
         </section>
 	</div>
     <img id="sunImage" src="img/sun.png">
