@@ -1,6 +1,5 @@
 body {
-	background: #eeeeee;
-	font-family: tahoma, verdana, sans serif;
+	background: #FFB6C1;
 }
 
 canvas {
@@ -9,10 +8,7 @@ canvas {
 	margin-bottom: 1rem;
 	box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
 	background: #fafafa;
-}
-
-#controls{
-  margin-left: 1rem;
+    border-radius: 2px;
 }
 
 #volumeLabel{
@@ -20,7 +16,7 @@ canvas {
 }
 
 section{
-  margin-bottom: 1rem;
+  margin-bottom: 4px;
 }
 
 #playButton{
@@ -43,4 +39,27 @@ button[data-playing="no"]:after{
 
 #sunImage{
     display: none;
+}
+
+h1{
+    font-size: 35px;
+    margin-top: 5px;
+    margin-bottom: 2px;
+    margin-left: 15px;
+    font-family: "Roboto", sans-serif;
+}
+
+h2{
+    font-size: 20px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+span{
+    margin-bottom: 2px;
+}
+
+#controls{
+    margin-left: 1.5rem;
+    font-family: "Open Sans", sans-serif;
 }

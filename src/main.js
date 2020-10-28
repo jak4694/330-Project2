@@ -194,6 +194,12 @@ function setupUI(canvasElement){
     progressCurveCB.onchange = e => {
         drawParams.showCurve = progressCurveCB.checked;
     }
+    
+    let gridCB = document.querySelector("#gridCB");
+    gridCB.checked = true;
+    gridCB.onchange = e => {
+        drawParams.showGrid = gridCB.checked;
+    }
 } // end setupUI
 
 function loop(){
@@ -202,7 +208,16 @@ function loop(){
     canvas.updateGrid(gridSpeed);
     canvas.updateBarPercent(barHeightPercentage);
     canvas.updateSunPercent(sunPercentage);
-    progress.innerHTML = "Progress: " + Math.round(audio.getProgress() * 100) + "%";
+    let currentProgress;
+    if(isNaN(audio.getProgress()))
+    {
+        currentProgress = 0;
+    }
+    else
+    {
+        currentProgress = Math.round(audio.getProgress() * 100);
+    }
+    progress.innerHTML = "Progress: " + currentProgress + "%";
 }
 
 export {init};
